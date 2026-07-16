@@ -8,6 +8,7 @@ client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
+
 def test_groq():
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -15,6 +16,27 @@ def test_groq():
             {
                 "role": "user",
                 "content": "Say Hello"
+            }
+        ]
+    )
+
+    return response.choices[0].message.content.strip()
+
+
+def chat(prompt: str, temperature: float = 0.1) -> str:
+    """
+    Generic Groq chat function.
+    Reusable for SQL generation, Dataset Understanding,
+    AI Insights, Explanations, RAG, etc.
+    """
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        temperature=temperature,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
             }
         ]
     )
@@ -141,18 +163,7 @@ QUESTION:
 SQL:
 """
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        temperature=0.1,
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    )
-
-    sql = response.choices[0].message.content.strip()
+    sql = chat(prompt)
 
     sql = sql.replace("```sql", "")
     sql = sql.replace("```", "")

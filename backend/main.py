@@ -4,7 +4,7 @@ from app.api.query import router as query_router
 from app.api.explain import router as explain_router
 from app.api.insights import router as insights_router
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.api.dataset import router as dataset_router
 
 app = FastAPI(
     title="QueryAI Backend",
@@ -36,7 +36,7 @@ app.add_middleware(
 app.include_router(query_router, prefix="/api")
 app.include_router(explain_router, prefix="/api")
 app.include_router(insights_router, prefix="/api")
-
+app.include_router(dataset_router)
 @app.get("/")
 def health_check():
     return {
