@@ -1,6 +1,6 @@
 export async function generateSQL(question, schema) {
   try {
-    const res = await fetch('http://localhost:8000/api/query', {
+    const res = await fetch('https://sql-x-2aye.onrender.com/api/query', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -28,7 +28,7 @@ export async function generateSQL(question, schema) {
 
 export async function explainSQL(sql, question) {
   try {
-    const res = await fetch('http://localhost:8000/api/explain', {
+    const res = await fetch('https://sql-x-2aye.onrender.com/api/explain', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -56,7 +56,7 @@ export async function explainSQL(sql, question) {
 
 export async function getInsights(schema) {
   try {
-    const res = await fetch('http://localhost:8000/api/insights', {
+    const res = await fetch('https://sql-x-2aye.onrender.com/api/insights', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

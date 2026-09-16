@@ -189,3 +189,5 @@ export default function ChartView({ columns, rows }) {
     </div>
   );
 }
+
+

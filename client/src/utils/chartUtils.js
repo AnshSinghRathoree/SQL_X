@@ -24,3 +24,5 @@ export function formatChartData(columns, rows) {
     value: Number(row[valueIndex]) || 0
   }));
 }
+
+

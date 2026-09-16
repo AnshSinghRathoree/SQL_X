@@ -11,3 +11,5 @@ export default function HistoryPanel({ history, onSelect }) {
     </div>
   );
 }
+
+

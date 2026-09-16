@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import Papa from 'papaparse';
 
 export function useDatabase() {
@@ -176,7 +176,7 @@ export function useDatabase() {
     formData.append("file", file);
 
     const response = await fetch(
-      "http://127.0.0.1:8000/dataset/analyze",
+      "https://sql-x-2aye.onrender.com/dataset/analyze",
       {
         method: "POST",
         body: formData,

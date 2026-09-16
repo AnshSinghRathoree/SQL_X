@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 
 import { useDatabase } from './hooks/useDatabase';
 
@@ -156,7 +156,7 @@ export default function App() {
       setAiLoading(true);
 
       const response = await fetch(
-        "http://127.0.0.1:8000/dataset/analyze-text",
+        "https://sql-x-2aye.onrender.com/dataset/analyze-text",
         {
           method: "POST",
 
@@ -365,7 +365,7 @@ export default function App() {
 
       const response =
         await fetch(
-          "http://127.0.0.1:8000/dataset/analyze-text",
+          "https://sql-x-2aye.onrender.com/dataset/analyze-text",
           {
             method: "POST",
 
