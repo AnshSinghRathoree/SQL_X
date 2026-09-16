@@ -11,9 +11,9 @@ class EmbeddingService:
             print("Loading embedding model...")
 
             EmbeddingService._model = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2"
-            )
-
+    "sentence-transformers/all-MiniLM-L6-v2",
+    backend="onnx"
+)
         self.model = EmbeddingService._model
 
     def generate_embedding(self, text: str):
