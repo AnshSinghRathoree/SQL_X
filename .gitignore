@@ -23,3 +23,7 @@ Thumbs.db
 
 # VS Code
 .vscode/
+# ChromaDB
+backend/chroma_db/
+
+

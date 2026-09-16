@@ -9,11 +9,12 @@ from app.services.groq_service import chat
 
 class DatasetService:
 
-    def extract_metadata(self, file_path: str):
+    def extract_metadata(self, file_path: str, table_name: str):
 
         df = pd.read_csv(file_path)
 
         metadata = {
+            "table_name": table_name,
             "row_count": len(df),
             "column_count": len(df.columns),
             "columns": list(df.columns),
@@ -27,11 +28,16 @@ class DatasetService:
 
         return metadata
 
-    def extract_metadata_from_text(self, csv_text: str):
+    def extract_metadata_from_text(
+        self,
+        csv_text: str,
+        table_name: str
+    ):
 
         df = pd.read_csv(StringIO(csv_text))
 
         metadata = {
+            "table_name": table_name,
             "row_count": len(df),
             "column_count": len(df.columns),
             "columns": list(df.columns),
@@ -58,6 +64,9 @@ Do not include markdown.
 Do not include explanations.
 
 Metadata:
+
+Table:
+{metadata["table_name"]}
 
 Rows:
 {metadata["row_count"]}
@@ -107,16 +116,23 @@ Return exactly this JSON:
         ids = []
         metadatas = []
 
-        # Dataset Summary
+        # ---------------- Dataset Summary ----------------
+
         documents.append(
             f"""
 Dataset Summary
 
-Rows: {metadata['row_count']}
-Columns: {metadata['column_count']}
+Table Name:
+{metadata["table_name"]}
+
+Rows:
+{metadata["row_count"]}
+
+Columns:
+{metadata["column_count"]}
 
 Columns Available:
-{', '.join(metadata['columns'])}
+{', '.join(metadata["columns"])}
 """
         )
 
@@ -126,12 +142,20 @@ Columns Available:
             "type": "summary"
         })
 
-        # Schema
-        schema_text = "Schema\n\n"
+        # ---------------- Schema ----------------
+
+        schema_text = f"""
+Database Schema
+
+Table Name:
+{metadata["table_name"]}
+
+Columns:
+"""
 
         for col in metadata["columns"]:
             dtype = metadata["data_types"][col]
-            schema_text += f"{col} ({dtype})\n"
+            schema_text += f"- {col} ({dtype})\n"
 
         documents.append(schema_text)
 
@@ -141,18 +165,23 @@ Columns Available:
             "type": "schema"
         })
 
-        # Individual Column Documents
+        # ---------------- Column Documents ----------------
+
         for column in metadata["columns"]:
 
             documents.append(
                 f"""
-Column Name: {column}
+Column Name:
+{column}
+
+Table:
+{metadata["table_name"]}
 
 Data Type:
-{metadata['data_types'][column]}
+{metadata["data_types"][column]}
 
 Missing Values:
-{metadata['missing_values'][column]}
+{metadata["missing_values"][column]}
 """
             )
 

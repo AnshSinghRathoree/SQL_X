@@ -5,6 +5,13 @@ export function useDatabase() {
   const [db, setDb] = useState(null);
   const [schema, setSchema] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [datasetStats, setDatasetStats] = useState({
+    table: '',
+    rows: 0,
+    columns: 0,
+  });
+
   const sqlJsRef = useRef(null);
 
   useEffect(() => {
@@ -20,7 +27,11 @@ export function useDatabase() {
 
         const savedCSV = localStorage.getItem("savedCSV");
         const savedTable = localStorage.getItem("savedTable");
-        const savedSchema = localStorage.getItem("savedSchema");
+        const savedStats = localStorage.getItem("datasetStats");
+
+        if (savedStats) {
+          setDatasetStats(JSON.parse(savedStats));
+        }
 
         if (savedCSV && savedTable) {
           loadCSV(savedCSV, savedTable);
@@ -42,22 +53,44 @@ export function useDatabase() {
     });
 
     const rows = result.data.filter(row =>
-      Object.values(row).some(val => val !== null && val !== '')
+      Object.values(row).some(
+        val => val !== null && val !== ''
+      )
     );
+
     const columns = result.meta.fields;
 
     const colDefs = columns.map(col => {
-      const sample = rows.find(r => r[col] != null)?.[col];
-      const type = typeof sample === 'number' ? 'REAL' : 'TEXT';
-      return { name: col, type };
+      const sample = rows.find(
+        r => r[col] != null
+      )?.[col];
+
+      const type =
+        typeof sample === 'number'
+          ? 'REAL'
+          : 'TEXT';
+
+      return {
+        name: col,
+        type,
+      };
     });
 
-    let database = new sqlJsRef.current.Database();
+    let database =
+      new sqlJsRef.current.Database();
 
-    const colDefStr = colDefs.map(c => `${c.name} ${c.type}`).join(', ');
-    database.run(`CREATE TABLE ${tableName} (${colDefStr})`);
+    const colDefStr = colDefs
+      .map(c => `${c.name} ${c.type}`)
+      .join(', ');
 
-    const placeholders = columns.map(() => '?').join(', ');
+    database.run(
+      `CREATE TABLE ${tableName} (${colDefStr})`
+    );
+
+    const placeholders = columns
+      .map(() => '?')
+      .join(', ');
+
     const stmt = database.prepare(
       `INSERT INTO ${tableName} VALUES (${placeholders})`
     );
@@ -67,7 +100,11 @@ export function useDatabase() {
         columns.map(c => {
           let val = row[c];
 
-          if (val === undefined || val === null || val === '') {
+          if (
+            val === undefined ||
+            val === null ||
+            val === ''
+          ) {
             return null;
           }
 
@@ -78,21 +115,36 @@ export function useDatabase() {
 
     stmt.free();
 
+    // Update database immediately
     setDb(database);
-    setSchema([
+
+    // Build new schema
+    const schemaData = [
       {
         table: tableName,
-        columns: colDefs
-      }
-    ]);
+        columns: colDefs,
+      },
+    ];
+
+    // Update schema immediately
+    setSchema(schemaData);
+
+    // Build dataset statistics
+    const stats = {
+      table: tableName,
+      rows: rows.length,
+      columns: columns.length,
+    };
+
+    // Update Dataset Summary immediately
+    setDatasetStats(stats);
+
+    // Persist data
     localStorage.setItem(
       "datasetStats",
-      JSON.stringify({
-        table: tableName,
-        rows: rows.length,
-        columns: columns.length
-      })
+      JSON.stringify(stats)
     );
+
     localStorage.setItem(
       "savedCSV",
       csvText
@@ -105,19 +157,58 @@ export function useDatabase() {
 
     localStorage.setItem(
       "savedSchema",
-      JSON.stringify([
-        { table: tableName, columns: colDefs }
-      ])
+      JSON.stringify(schemaData)
     );
 
-    return true;
+    return {
+      success: true,
+      stats,
+    };
   };
 
+  // ===========================
+  // AI Dataset Understanding
+  // ===========================
+
+  const analyzeDataset = async (file) => {
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    const response = await fetch(
+      "http://127.0.0.1:8000/dataset/analyze",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        "Dataset analysis failed"
+      );
+    }
+
+    return await response.json();
+  };
+
+  // ===========================
+  // Run SQL Query
+  // ===========================
+
   const runQuery = sql => {
-    if (!db) throw new Error('No DB');
+    if (!db) {
+      throw new Error('No DB');
+    }
 
     const res = db.exec(sql);
-    if (!res.length) return { columns: [], rows: [] };
+
+    if (!res.length) {
+      return {
+        columns: [],
+        rows: [],
+      };
+    }
 
     return {
       columns: res[0].columns,
@@ -125,5 +216,12 @@ export function useDatabase() {
     };
   };
 
-  return { schema, loading, loadCSV, runQuery };
+  return {
+    schema,
+    loading,
+    loadCSV,
+    analyzeDataset,
+    runQuery,
+    datasetStats,
+  };
 }

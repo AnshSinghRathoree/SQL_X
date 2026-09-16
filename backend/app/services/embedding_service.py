@@ -2,14 +2,19 @@ from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingService:
-    """
-    Responsible for generating embeddings from text.
-    """
+
+    _model = None
 
     def __init__(self):
-        self.model = SentenceTransformer(
-            "sentence-transformers/all-MiniLM-L6-v2"
-        )
+
+        if EmbeddingService._model is None:
+            print("Loading embedding model...")
+
+            EmbeddingService._model = SentenceTransformer(
+                "sentence-transformers/all-MiniLM-L6-v2"
+            )
+
+        self.model = EmbeddingService._model
 
     def generate_embedding(self, text: str):
 

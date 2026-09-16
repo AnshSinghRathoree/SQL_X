@@ -108,10 +108,15 @@ textarea {
 
 /* ── Sidebar ─────────────────────── */
 .sidebar {
+  width: 200px;
+  flex: 0 0 200px;
+
   background: var(--surface);
   border-right: 1px solid var(--border);
+
   display: flex;
   flex-direction: column;
+
   overflow: hidden;
   padding-bottom: 16px;
 }
@@ -254,6 +259,10 @@ textarea {
   font-family: var(--mono);
   font-size: 10.5px;
   color: var(--text-2);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .col-type {

@@ -6,7 +6,6 @@ from app.services.vector_store import VectorStore
 class RAGService:
 
     def __init__(self):
-
         self.dataset_service = DatasetService()
         self.embedding_service = EmbeddingService()
         self.vector_store = VectorStore()
@@ -29,3 +28,24 @@ class RAGService:
             embeddings=embeddings,
             metadatas=metadatas
         )
+
+    def retrieve_context(
+        self,
+        question: str,
+        top_k: int = 3
+    ):
+
+        question_embedding = self.embedding_service.generate_embedding(
+            question
+        )
+
+        results = self.vector_store.search(
+            embedding=question_embedding,
+            top_k=top_k
+        )
+
+        documents = results["documents"][0]
+
+        context = "\n\n".join(documents)
+
+        return context

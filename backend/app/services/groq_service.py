@@ -11,7 +11,7 @@ client = Groq(
 
 def test_groq():
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[
             {
                 "role": "user",
@@ -31,7 +31,7 @@ def chat(prompt: str, temperature: float = 0.1) -> str:
     """
 
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         temperature=temperature,
         messages=[
             {
@@ -44,129 +44,87 @@ def chat(prompt: str, temperature: float = 0.1) -> str:
     return response.choices[0].message.content.strip()
 
 
-def generate_sql(question: str, schema: list):
+def generate_sql_with_rag(question: str, context: str):
 
-    schema_text = ""
+    print("\n" + "=" * 80)
+    print("QUESTION")
+    print("=" * 80)
+    print(question)
 
-    for table in schema:
-        schema_text += f"Table: {table['table']}\nColumns:\n"
-
-        for column in table["columns"]:
-            schema_text += f"  {column['name']} ({column['type']})\n"
-
-        schema_text += "\n"
+    print("\n" + "=" * 80)
+    print("RETRIEVED CONTEXT")
+    print("=" * 80)
+    print(context)
 
     prompt = f"""
-You are an expert SQLite SQL generator for business analytics.
+You are an expert SQLite SQL generator.
 
-DATABASE SCHEMA:
-{schema_text}
+The retrieved context contains the complete database schema.
 
-BUSINESS DEFINITIONS:
+IMPORTANT INSTRUCTIONS:
 
-- Revenue = SUM(Sales)
-- Total Sales = SUM(Sales)
-- Sales Performance = SUM(Sales)
+1. Identify the table name from the retrieved context.
+2. Use ONLY that table name.
+3. Never invent table names.
+4. Never rename the table.
+5. If the retrieved context contains:
 
-- Quantity Sold = SUM(Quantity)
-- Product Performance = GROUP BY Product
-- Category Performance = GROUP BY Category
-- Regional Performance = GROUP BY Region
+Table Name:
+sales_data
 
-SQL GENERATION RULES:
+then every query MUST use:
 
-1. Return ONLY executable SQLite SQL.
-2. Never return markdown.
-3. Never explain the query.
-4. Use exact table and column names from schema.
-5. Always use aliases for aggregated columns.
-
-6. When using:
-   SUM()
-   AVG()
-   COUNT()
-   MIN()
-   MAX()
-
-   Include the aggregation in SELECT.
-
-7. For ranking queries:
-   - highest
-   - best
-   - top
-   - most
-
-   Use:
-   ORDER BY DESC
-   LIMIT
-
-8. For:
-   - lowest
-   - least
-   - worst
-
-   Use:
-   ORDER BY ASC
-
-9. For product analysis:
-   GROUP BY Product
-
-10. For category analysis:
-    GROUP BY Category
-
-11. For regional analysis:
-    GROUP BY Region
-
-12. For monthly trends:
-    Use SQLite STRFTIME('%Y-%m', Date)
-
-13. Always generate production-quality SQL.
-
-EXAMPLES:
-
-Question:
-Which product generated the highest total sales?
-
-SQL:
-SELECT Product,
-       SUM(Sales) AS TotalSales
 FROM sales_data
-GROUP BY Product
-ORDER BY TotalSales DESC
-LIMIT 1;
 
-Question:
-Which category generated the highest revenue?
+Never use:
 
-SQL:
-SELECT Category,
-       SUM(Sales) AS TotalRevenue
-FROM sales_data
-GROUP BY Category
-ORDER BY TotalRevenue DESC
-LIMIT 1;
+- Orders
+- Customers
+- Products
+- dataset
+- table
+- my_table
+- main
 
-Question:
-Which products sold the highest quantity?
+Use ONLY tables and columns present in the retrieved context.
 
-SQL:
-SELECT Product,
-       SUM(Quantity) AS TotalQuantity
-FROM sales_data
-GROUP BY Product
-ORDER BY TotalQuantity DESC
-LIMIT 10;
+=========================
+RETRIEVED CONTEXT
+=========================
 
-QUESTION:
+{context}
+
+=========================
+QUESTION
+=========================
+
 {question}
+
+=========================
+RULES
+=========================
+
+- Return ONLY valid SQLite SQL.
+- No markdown.
+- No explanation.
+- Use only columns from the schema.
+- Use proper GROUP BY when using aggregates.
+- For highest/top/best use ORDER BY DESC LIMIT 1.
+- For lowest/least use ORDER BY ASC LIMIT 1.
 
 SQL:
 """
 
-    sql = chat(prompt)
+    sql = chat(prompt, temperature=0)
 
     sql = sql.replace("```sql", "")
     sql = sql.replace("```", "")
     sql = sql.strip()
+
+    print("\n" + "=" * 80)
+    print("GENERATED SQL")
+    print("=" * 80)
+    print(sql)
+    print("=" * 80 + "\n")
 
     return sql
