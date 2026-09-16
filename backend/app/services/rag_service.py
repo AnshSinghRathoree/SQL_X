@@ -4,21 +4,24 @@ from app.services.vector_store import VectorStore
 
 
 class RAGService:
-
     def __init__(self):
         self.dataset_service = DatasetService()
-        self.embedding_service = EmbeddingService()
+        self.embedding_service = None
         self.vector_store = VectorStore()
 
-    def index_dataset(self, metadata: dict):
+    def _get_embedding_service(self):
+        if self.embedding_service is None:
+            self.embedding_service = EmbeddingService()
+        return self.embedding_service
 
+    def index_dataset(self, metadata: dict):
         ids, documents, metadatas = (
             self.dataset_service.build_documents(metadata)
         )
 
-        embeddings = self.embedding_service.generate_embeddings(
-            documents
-        )
+        embedding_service = self._get_embedding_service()
+
+        embeddings = embedding_service.generate_embeddings(documents)
 
         self.vector_store.clear()
 
@@ -29,13 +32,10 @@ class RAGService:
             metadatas=metadatas
         )
 
-    def retrieve_context(
-        self,
-        question: str,
-        top_k: int = 3
-    ):
+    def retrieve_context(self, question: str, top_k: int = 3):
+        embedding_service = self._get_embedding_service()
 
-        question_embedding = self.embedding_service.generate_embedding(
+        question_embedding = embedding_service.generate_embedding(
             question
         )
 
