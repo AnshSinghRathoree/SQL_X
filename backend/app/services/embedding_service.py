@@ -3,13 +3,17 @@ class EmbeddingService:
 
     def __init__(self):
         if EmbeddingService._model is None:
-            print("Loading lightweight embedding model...")
+            print("Loading quantized embedding model...")
 
             from sentence_transformers import SentenceTransformer
 
             EmbeddingService._model = SentenceTransformer(
                 "sentence-transformers/paraphrase-MiniLM-L3-v2",
-                backend="onnx"
+                backend="onnx",
+                model_kwargs={
+                    "file_name": "onnx/model_quint8_avx2.onnx",
+                    "provider": "CPUExecutionProvider",
+                },
             )
 
         self.model = EmbeddingService._model
@@ -18,7 +22,8 @@ class EmbeddingService:
         embedding = self.model.encode(
             text,
             convert_to_numpy=True,
-            batch_size=1
+            batch_size=1,
+            show_progress_bar=False,
         )
 
         return embedding.tolist()
@@ -27,7 +32,8 @@ class EmbeddingService:
         embeddings = self.model.encode(
             texts,
             convert_to_numpy=True,
-            batch_size=1
+            batch_size=1,
+            show_progress_bar=False,
         )
 
         return embeddings.tolist()
