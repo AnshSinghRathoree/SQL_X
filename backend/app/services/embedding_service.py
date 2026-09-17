@@ -3,12 +3,12 @@ class EmbeddingService:
 
     def __init__(self):
         if EmbeddingService._model is None:
-            print("Loading embedding model...")
+            print("Loading lightweight embedding model...")
 
             from sentence_transformers import SentenceTransformer
 
             EmbeddingService._model = SentenceTransformer(
-                "sentence-transformers/all-MiniLM-L6-v2",
+                "sentence-transformers/paraphrase-MiniLM-L3-v2",
                 backend="onnx"
             )
 
@@ -17,7 +17,8 @@ class EmbeddingService:
     def generate_embedding(self, text: str):
         embedding = self.model.encode(
             text,
-            convert_to_numpy=True
+            convert_to_numpy=True,
+            batch_size=1
         )
 
         return embedding.tolist()
@@ -25,7 +26,8 @@ class EmbeddingService:
     def generate_embeddings(self, texts: list[str]):
         embeddings = self.model.encode(
             texts,
-            convert_to_numpy=True
+            convert_to_numpy=True,
+            batch_size=1
         )
 
         return embeddings.tolist()
