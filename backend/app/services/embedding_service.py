@@ -1,39 +1,25 @@
+from sklearn.feature_extraction.text import HashingVectorizer
+
+
 class EmbeddingService:
-    _model = None
+    _vectorizer = None
 
     def __init__(self):
-        if EmbeddingService._model is None:
-            print("Loading quantized embedding model...")
+        if EmbeddingService._vectorizer is None:
+            print("Loading lightweight embedding vectorizer...")
 
-            from sentence_transformers import SentenceTransformer
-
-            EmbeddingService._model = SentenceTransformer(
-                "sentence-transformers/paraphrase-MiniLM-L3-v2",
-                backend="onnx",
-                model_kwargs={
-                    "file_name": "onnx/model_quint8_avx2.onnx",
-                    "provider": "CPUExecutionProvider",
-                },
+            EmbeddingService._vectorizer = HashingVectorizer(
+                n_features=384,
+                alternate_sign=False,
+                norm="l2"
             )
 
-        self.model = EmbeddingService._model
+        self.vectorizer = EmbeddingService._vectorizer
 
     def generate_embedding(self, text: str):
-        embedding = self.model.encode(
-            text,
-            convert_to_numpy=True,
-            batch_size=1,
-            show_progress_bar=False,
-        )
-
+        embedding = self.vectorizer.transform([text]).toarray()[0]
         return embedding.tolist()
 
     def generate_embeddings(self, texts: list[str]):
-        embeddings = self.model.encode(
-            texts,
-            convert_to_numpy=True,
-            batch_size=1,
-            show_progress_bar=False,
-        )
-
+        embeddings = self.vectorizer.transform(texts).toarray()
         return embeddings.tolist()
